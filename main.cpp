@@ -1,60 +1,74 @@
-#include <SFML/Graphics.hpp>  // Include the SFML graphics module for drawing
-#include <iostream>  // Include iostream for printing error messages
+#include <SFML/Graphics.hpp>
+#include <optional>
+#include <iostream>
 
 int main()
 {
-    // Create a window with a resolution of 640x480 pixels and a title "Sprite rendering"
-    sf::RenderWindow window(sf::VideoMode({640, 480}), "Sprite rendering");
+    // Створення вікна розміром 640x480 пікселів
+    sf::RenderWindow window(sf::VideoMode({640, 480}), "Рух спрайта");
 
-    // Create an sf::Image object to hold the image data
-    sf::Image heroimage;
-    
-    // Try to load the image from the file. If it fails, print an error message and exit.
-    if (!heroimage.loadFromFile("images/Walk.png"))
-    {
-        std::cerr << "Error loading image!" << std::endl;  // Output error message to the console
-        return -1;  // Return with an error code (-1) if image fails to load
-    }
-
-    // Create an sf::Texture object to store the texture data (which is derived from the image)
+    // Завантаження текстури персонажа з файлу
     sf::Texture herotexture;
-    
-    // Try to load the texture from the image. If it fails, print an error message and exit.
-    if (!herotexture.loadFromImage(heroimage))
-    {
-        std::cerr << "Error loading texture from image!" << std::endl;  // Output error message to the console
-        return -1;  // Return with an error code (-1) if texture fails to load
-    }
+    if (!herotexture.loadFromFile("images/Walk.png"))
+        return -1; // Якщо завантаження не вдалося, повертаємо -1
 
-    // Create an sf::Sprite object to represent the hero character in the game. It uses the texture we just loaded.
+    // Створення спрайта та встановлення йому текстури
     sf::Sprite herosprite(herotexture);
+    herosprite.setPosition({32.f, 32.f}); // Встановлення початкової позиції спрайта
+    herosprite.setTextureRect(sf::IntRect({0, 0}, {32, 32})); // Визначення області текстури для спрайта
 
-    herosprite.setTextureRect(sf::IntRect({0, 0}, {32, 32}));
-    // Set the initial position of the sprite (32px from the left, 32px from the top of the window)
-    herosprite.setPosition({50.f, 25.f});
-    herosprite.scale({3.f, 3.f});
+    float CurrentFrame = 0; // Поточний кадр анімації
+    sf::Clock clock; // Годинник для відстеження часу між кадрами
 
-    // Main loop: keep the window open and handle events until it's closed
     while (window.isOpen())
     {
-        // Event handling: check for events like window closing
+        float time = clock.getElapsedTime().asMicroseconds(); // Отримуємо час у мікросекундах
+        clock.restart(); // Перезапускаємо годинник
+        time = time / 800; // Зменшуємо значення для корекції швидкості
+
+        // Обробка подій у вікні
         while (std::optional<sf::Event> event = window.pollEvent())
         {
-            // If the window close event is triggered, close the window
             if (event->is<sf::Event::Closed>())
-                window.close();
+                window.close(); // Закриваємо вікно, якщо отримано подію закриття
         }
 
-        // Clear the window (reset it to a blank state before drawing the next frame)
-        window.clear();
-        
-        // Draw the sprite (the hero) onto the window
-        window.draw(herosprite);
-        
-        // Display the window (show the content we've drawn so far)
-        window.display();
+        std::cout << CurrentFrame << "\n"; // Вивід значення поточного кадру в консоль
+
+        // Перевірка натискання клавіш та оновлення позиції спрайта
+        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Left))
+        {
+            CurrentFrame += 0.005 * time;
+            if (CurrentFrame > 3) CurrentFrame -= 3;
+            herosprite.move(sf::Vector2f(-0.1f * time, 0.f)); // Рух ліворуч
+            herosprite.setTextureRect(sf::IntRect({32 * int(CurrentFrame), 96}, {32, 32})); // Анімація для руху вліво
+        }
+        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Right))
+        {
+            CurrentFrame += 0.005 * time;
+            if (CurrentFrame > 3) CurrentFrame -= 3;
+            herosprite.move(sf::Vector2f(0.1f * time, 0.f)); // Рух праворуч
+            herosprite.setTextureRect(sf::IntRect({32 * int(CurrentFrame), 64}, {32, 32})); // Анімація для руху вправо
+        }
+        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Up))
+        {
+            CurrentFrame += 0.005 * time;
+            if (CurrentFrame > 3) CurrentFrame -= 3;
+            herosprite.move(sf::Vector2f(0.f, -0.1f * time)); // Рух вгору
+            herosprite.setTextureRect(sf::IntRect({32 * int(CurrentFrame), 32}, {32, 32})); // Анімація для руху вгору
+        }
+        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Down))
+        {
+            CurrentFrame += 0.005 * time;
+            if (CurrentFrame > 3) CurrentFrame -= 3;
+            herosprite.move(sf::Vector2f(0.f, 0.1f * time)); // Рух вниз
+            herosprite.setTextureRect(sf::IntRect({32 * int(CurrentFrame), 0}, {32, 32})); // Анімація для руху вниз
+        }
+
+        window.clear(); // Очищаємо вікно перед відображенням нового кадру
+        window.draw(herosprite); // Малюємо спрайт на екрані
+        window.display(); // Відображаємо новий кадр
     }
 
-    // Return 0 to indicate the program ended successfully
     return 0;
 }
